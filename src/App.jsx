@@ -6,7 +6,6 @@ import './index.css'
 const SYRUP_DATA = [
   { drugName: "Amoxicillin 125 mg/5 mL", minDose: 25, maxDose: 50, interval: 8, doseType: 'daily' },
   { drugName: "Amoxicillin 250 mg/5 mL", minDose: 25, maxDose: 50, interval: 8, doseType: 'daily' },
-  { drugName: "Paracetamol 120 mg/5 mL", minDose: 10, maxDose: 15, interval: 6, doseType: 'single' },
   { drugName: "Paracetamol 125 mg/5 mL", minDose: 10, maxDose: 15, interval: 6, doseType: 'single' },
   { drugName: "Paracetamol 250 mg/5 mL", minDose: 10, maxDose: 15, interval: 6, doseType: 'single' },
   { drugName: "Ibuprofen 100 mg/5 mL", minDose: 5, maxDose: 10, interval: 6, doseType: 'single' },
