@@ -302,7 +302,7 @@ export default function App() {
 
         // Mark as sent so it doesn't fire again on re-renders
         notificationSent.current = true;
-        console.log("Admin notified.");
+       
 
       } catch (error) {
         console.error("Failed to send notification:", error);
