@@ -280,8 +280,8 @@ export default function App() {
         `;
 
         // --- 4. Send to Telegram using ENV variables ---
-        const botToken = process.VITE_TELEGRAM_BOT_TOKEN; 
-        const chatId = process.VITE_TELEGRAM_CHAT_ID; 
+        const botToken = import.meta.env.VITE_TELEGRAM_BOT_TOKEN; 
+        const chatId = import.meta.env.VITE_TELEGRAM_CHAT_ID;
 
         if (!botToken || !chatId) {
             console.error("Telegram tokens missing in .env file");
