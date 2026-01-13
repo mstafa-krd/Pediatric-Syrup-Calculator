@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Calculator, Baby, ArrowLeft, Scale, Calendar, Clock, Info } from 'lucide-react';
 import './index.css'
+
 // --- DATASETS ---
 
 const SYRUP_DATA = [
@@ -34,7 +35,7 @@ const SYRUP_DATA = [
 const parseDrugStrength = (str) => {
   const strengthMatch = str.match(/(\d+([.,]\d+)?)\s*(mg|g|IU)/i);
   let mg = strengthMatch ? parseFloat(strengthMatch[1]) : 0;
-  
+   
   if (str.includes("228")) mg = 200;
   if (str.includes("312")) mg = 250;
   if (str.includes("457")) mg = 400;
@@ -49,7 +50,7 @@ const calculateDose = (weight, drug) => {
   if (!weight || isNaN(weight)) return null;
 
   const { mg: concMg, ml: concMl } = parseDrugStrength(drug.drugName);
-  
+   
   if (!concMg || !concMl) return null;
 
   // 1. Determine Single Dose MG Target
@@ -71,7 +72,7 @@ const calculateDose = (weight, drug) => {
   const maxVol = calcVol(targetMaxMg);
 
   const format = (n) => n < 10 ? n.toFixed(1) : Math.round(n);
-  
+   
   const valString = minVol === maxVol 
     ? `${format(minVol)}` 
     : `${format(minVol)} - ${format(maxVol)}`;
@@ -157,7 +158,7 @@ const GlobalInput = ({ weight, setWeight, age, setAge }) => {
           </>
         )}
       </div>
-      
+       
       {mode === 'age' && weight && (
         <div className="mt-2 text-xs text-center text-teal-600 bg-teal-50 p-1 rounded">
           Est. Weight: <strong>{weight} kg</strong>
@@ -192,7 +193,7 @@ const DrugRow = ({ drug, weight }) => {
            {drug.note && <span className="text-blue-400 italic">{drug.note}</span>}
         </div>
       </div>
-      
+       
       <div className="text-right shrink-0">
         <div className="text-xl font-bold text-teal-600">
           {result.val}<span className="text-sm font-medium ml-1 text-teal-500">{result.unit}</span>
@@ -210,7 +211,7 @@ const DrugRow = ({ drug, weight }) => {
 const CalculatorView = ({ onBack }) => {
   const [weight, setWeight] = useState('');
   const [age, setAge] = useState('');
-  
+   
   return (
     <div className="flex flex-col h-screen bg-slate-100 overflow-hidden">
       {/* Fixed Top Section */}
@@ -252,7 +253,63 @@ const CalculatorView = ({ onBack }) => {
 // --- Main App Component ---
 
 export default function App() {
-  // Since we deleted drops, we default strictly to the calculator view.
-  // No home screen menu needed unless you want to add more features later.
+ const notificationSent = useRef(false);
+
+  useEffect(() => {
+    // If notification already sent in this session, skip
+    if (notificationSent.current) return;
+
+    const sendNotification = async () => {
+      try {
+        // --- 1. Get Visitor's IP and Location Data ---
+        const ipResponse = await fetch('https://ipapi.co/json/');
+        const ipData = await ipResponse.json();
+
+        // --- 2. Gather Device Information ---
+        const userAgent = navigator.userAgent;
+        const platform = navigator.platform;
+        
+        // --- 3. Construct the Message ---
+        const message = `
+🚨 *New Website Visitor!*
+
+📍 *Location:* ${ipData.city || 'Unknown'}, ${ipData.country_name || 'Unknown'}
+🌐 *IP Address:* ${ipData.ip || 'Unknown'}
+📱 *Device:* ${platform}
+🔍 *Browser:* ${userAgent}
+        `;
+
+        // --- 4. Send to Telegram using ENV variables ---
+        const botToken = process.env.REACT_APP_TELEGRAM_BOT_TOKEN; 
+        const chatId = process.env.REACT_APP_TELEGRAM_CHAT_ID; 
+
+        if (!botToken || !chatId) {
+            console.error("Telegram tokens missing in .env file");
+            return;
+        }
+
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: message,
+            parse_mode: 'Markdown',
+          }),
+        });
+
+        // Mark as sent so it doesn't fire again on re-renders
+        notificationSent.current = true;
+        console.log("Admin notified.");
+
+      } catch (error) {
+        console.error("Failed to send notification:", error);
+      }
+    };
+
+    sendNotification();
+  }, []);
   return <CalculatorView onBack={null} />;
 }
